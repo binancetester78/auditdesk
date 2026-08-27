@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#13181F" />
+<title>Audit Desk</title>
+<link rel="manifest" href="./manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root{
+    --paper:#13181F;
+    --panel:#1D252F;
+    --ink:#E7ECF2;
+    --ink-soft:#9FB0BF;
+    --ink-faint:#5F7282;
+    --border:#2E3947;
+    --accent:#D9AE5F;
+    --accent-soft:#3A2F1C;
+    --role-lead:#5B7FA6;
+    --role-colead:#4FA08F;
+    --role-member:#7D8C9C;
+    --role-solo:#C99A3B;
+    --role-reviewer:#8B76B0;
+    --role-admin:#A8825B;
+    --status-notstarted:#6B7D8F;
+    --status-progress:#4A7FBF;
+    --status-waiting:#C99A3B;
+    --status-done:#4FA08F;
+    --overdue:#D9776E;
+    --priority-low:#7FC3A3;
+    --priority-medium:#E3BD6E;
+    --priority-high:#E0837A;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  #root{min-height:100vh;}
+  .app{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+  .header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:22px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:6px;}
+  .header h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;margin:0;letter-spacing:-0.01em;}
+  .header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .view-toggle{display:inline-flex;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:3px;box-shadow:var(--shadow);}
+  .toggle-btn{border:none;background:transparent;padding:7px 16px;border-radius:999px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;color:var(--ink-soft);cursor:pointer;transition:background .15s,color .15s;}
+  .toggle-btn.active{background:var(--accent);color:var(--paper);}
+  .io-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{font-family:'Inter',sans-serif;font-weight:600;font-size:13px;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid transparent;transition:transform .05s ease,background .15s,border-color .15s;white-space:nowrap;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent);color:var(--paper);border-color:var(--accent);}
+  .btn-primary:hover{background:#E8C27A;}
+  .btn-secondary{background:var(--panel);color:var(--ink);border-color:var(--border);}
+  .btn-secondary:hover{border-color:var(--ink-faint);}
+  .btn-text{background:transparent;border:none;color:var(--ink-soft);text-decoration:underline;font-size:12px;padding:4px 0;cursor:pointer;}
+  .btn-text:hover{color:var(--ink);}
+  .icon-btn{border:none;background:transparent;cursor:pointer;color:var(--ink-faint);padding:4px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s;}
+  .icon-btn:hover{background:var(--paper);color:var(--ink);}
+  .banner{border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;border:1px solid;}
+  .banner-success{background:#1E2F26;border-color:#345240;color:#8FD6B0;}
+  .banner-error{background:#2E1F1F;border-color:#4E3030;color:#E0938C;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+  .stat-value{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;line-height:1.1;}
+  .stat-card.is-overdue .stat-value{color:var(--overdue);}
+  .stat-label{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .tabs-row{display:flex;gap:6px;align-items:flex-end;overflow-x:auto;padding-bottom:0;}
+  .tab{font-family:'Inter',sans-serif;position:relative;padding:10px 18px 10px 16px;border:1px solid var(--border);border-bottom:none;background:#222B35;color:var(--ink-soft);border-radius:8px 8px 0 0;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;white-space:nowrap;transition:background .15s,color .15s;top:1px;}
+  .tab:hover{background:#2A333E;color:var(--ink);}
+  .tab.active{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--panel);z-index:2;}
+  .tab-role-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.12) inset;}
+  .tab-code{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);}
+  .tab-add{border:1px dashed var(--border);background:transparent;color:var(--ink-faint);font-weight:700;font-size:16px;padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;line-height:1;}
+  .tab-add:hover{color:var(--ink);border-color:var(--ink-faint);}
+  .tab.closed{opacity:0.5;font-style:italic;}
+  .tab.closed .tab-role-dot{background:var(--ink-faint) !important;}
+  .show-closed-toggle{font-size:12px;color:var(--ink-faint);display:flex;align-items:center;gap:6px;user-select:none;cursor:pointer;padding:8px 12px;margin-bottom:1px;white-space:nowrap;}
+  .closed-banner{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--paper);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;font-size:13px;color:var(--ink-soft);}
+  .audit-panel{background:var(--panel);border:1px solid var(--border);border-radius:0 10px 10px 10px;box-shadow:var(--shadow);padding:20px;margin-bottom:30px;}
+  .audit-panel-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .audit-title-row{display:flex;align-items:center;gap:10px;}
+  .audit-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;}
+  .audit-meta-row{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;}
+  .audit-code{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);}
+  .role-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;color:#fff;letter-spacing:0.03em;}
+  .target-date{font-size:12px;color:var(--ink-soft);}
+  .audit-progress{min-width:160px;text-align:right;}
+  .progress-track{width:160px;height:6px;border-radius:99px;background:var(--paper);overflow:hidden;margin-bottom:5px;margin-left:auto;}
+  .progress-fill{height:100%;background:var(--role-colead);border-radius:99px;transition:width .25s ease;}
+  .progress-label{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .task-list-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;}
+  .hide-done{font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;user-select:none;cursor:pointer;}
+  .task-list{display:flex;flex-direction:column;gap:8px;}
+  .task-row{border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s;}
+  .task-row.is-overdue{border-color:#4A3032;background:#2A1E1F;}
+  .task-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .task-title-btn{background:none;border:none;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--ink);padding:0;flex:1 1 200px;}
+  .task-title-btn:hover{text-decoration:underline;}
+  .task-tags{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);}
+  .status-pill{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;padding:3px 9px;border-radius:999px;color:#fff;cursor:pointer;border:none;letter-spacing:0.02em;}
+  .priority-dot{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-soft);}
+  .priority-dot .dot{width:8px;height:8px;border-radius:50%;}
+  .due-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);}
+  .due-date.overdue{color:var(--overdue);font-weight:600;}
+  .recurring-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);border:1px solid var(--border);border-radius:5px;padding:1px 6px;white-space:nowrap;}
+  .assignee-tag{font-size:12px;color:var(--ink-soft);}
+  .row-actions{display:flex;gap:4px;margin-left:auto;}
+  .task-audit-tag{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);border:1px solid var(--border);border-radius:5px;padding:1px 6px;}
+  .notes-content{font-size:13px;color:var(--ink-soft);background:var(--paper);border-radius:6px;padding:8px 10px;line-height:1.5;white-space:pre-wrap;}
+  .delete-confirm{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--overdue);}
+  .delete-confirm button{font-size:12px;border:none;background:none;cursor:pointer;text-decoration:underline;font-weight:600;}
+  .empty-state{text-align:center;padding:36px 16px;color:var(--ink-soft);}
+  .empty-state p{margin:0 0 12px;font-size:14px;}
+  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);align-items:center;}
+  select,input[type="text"],input[type="date"],textarea{font-family:'Inter',sans-serif;font-size:13px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--panel);color:var(--ink);}
+  select option{background:var(--panel);color:var(--ink);}
+  select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .filter-bar select{min-width:130px;}
+  .filter-bar .search-input{flex:1;min-width:160px;}
+  .all-tasks-table{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .all-tasks-table .task-row{border:none;border-radius:0;border-bottom:1px solid var(--border);padding:12px 14px;}
+  .all-tasks-table .task-row:last-child{border-bottom:none;}
+  .all-tasks-table .task-row.is-overdue{background:#2A1E1F;}
+  .log-stats{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-soft);margin-left:auto;}
+  .log-stats strong{font-family:'Space Grotesk',sans-serif;color:var(--ink);font-size:15px;}
+  .log-group{margin-bottom:18px;}
+  .log-date-header{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  .log-entry{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);margin-bottom:6px;font-size:13px;box-shadow:var(--shadow);}
+  .log-entry-title{flex:1;}
+  .log-tag-ontime{font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;color:var(--status-done);}
+  .log-tag-late{font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;color:var(--overdue);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .modal{background:var(--panel);border-radius:12px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,0.55);}
+  .modal h2{font-family:'Space Grotesk',sans-serif;font-size:18px;margin:0 0 16px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
+  .form-row{display:flex;gap:10px;}
+  .form-row .form-group{flex:1;}
+  label{font-size:12px;font-weight:600;color:var(--ink-soft);}
+  .field-hint{font-size:12px;color:var(--ink-faint);margin:-6px 0 13px;line-height:1.4;}
+  .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px;}
+  .modal-actions-right{display:flex;gap:8px;margin-left:auto;}
+  .footer-note{text-align:center;font-size:12px;color:var(--ink-faint);margin-top:30px;}
+  .save-indicator{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);display:flex;align-items:center;gap:5px;}
+  .save-dot{width:6px;height:6px;border-radius:50%;background:var(--status-done);}
+  @media(max-width:720px){
+    .stats-row{grid-template-columns:repeat(2,1fr);}
+    .header{align-items:flex-start;}
+    .header-controls{align-items:flex-start;width:100%;}
+    .view-toggle{width:100%;justify-content:center;}
+    .io-actions{width:100%;}
+    .io-actions .btn{flex:1;}
+    .audit-progress{text-align:left;width:100%;}
+    .progress-track{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+<script type="text/babel">
+const { useState, useRef, useMemo, useEffect } = React;
+
+const STATUS_OPTIONS = ['Not Started', 'In Progress', 'Waiting', 'Done'];
+const STATUS_COLORS = {'Not Started':'var(--status-notstarted)','In Progress':'var(--status-progress)','Waiting':'var(--status-waiting)','Done':'var(--status-done)'};
+const PRIORITY_OPTIONS = ['Low', 'Medium', 'High'];
+const PRIORITY_COLORS = {Low:'var(--priority-low)',Medium:'var(--priority-medium)',High:'var(--priority-high)'};
+const ROLE_OPTIONS = ['Lead', 'Co-Lead', 'Team Member', 'Solo', 'Reviewer', 'Admin'];
+const ROLE_COLORS = {'Lead':'var(--role-lead)','Co-Lead':'var(--role-colead)','Team Member':'var(--role-member)','Solo':'var(--role-solo)','Reviewer':'var(--role-reviewer)','Admin':'var(--role-admin)'};
+const RECURRING_OPTIONS = ['None', 'Daily', 'Weekly', 'Biweekly', 'Monthly', 'Quarterly', 'Yearly'];
+const STORAGE_KEY = 'auditdesk_data';
+
+const toLocalDateStr = (d) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+};
+const todayStr = () => toLocalDateStr(new Date());
+const uid = (prefix) => prefix + '-' + Math.random().toString(36).slice(2, 9);
+const isOverdue = (task) => task.dueDate && task.dueDate < todayStr() && task.status !== 'Done';
+const nextStatus = (s) => STATUS_OPTIONS[(STATUS_OPTIONS.indexOf(s) + 1) % STATUS_OPTIONS.length];
+const formatLogDate = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+};
+const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return toLocalDateStr(d); };
+const advanceDate = (dateStr, recurring) => {
+  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+  switch (recurring) {
+    case 'Daily': d.setDate(d.getDate() + 1); break;
+    case 'Weekly': d.setDate(d.getDate() + 7); break;
+    case 'Biweekly': d.setDate(d.getDate() + 14); break;
+    case 'Monthly': d.setMonth(d.getMonth() + 1); break;
+    case 'Quarterly': d.setMonth(d.getMonth() + 3); break;
+    case 'Yearly': d.setFullYear(d.getFullYear() + 1); break;
+  }
+  return toLocalDateStr(d);
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.audits) && Array.isArray(parsed.tasks)) return parsed;
+    }
+  } catch(e) {}
+  return { version: 2, audits: [], tasks: [], completionLog: [] };
+}
+function saveData(audits, tasks, completionLog) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, audits, tasks, completionLog })); } catch(e) {}
+}
+
+function RoleBadge({ role }) {
+  return <span className="role-badge" style={{ background: ROLE_COLORS[role] || 'var(--ink-faint)' }}>{role}</span>;
+}
+function StatusPill({ status, onClick }) {
+  return <button className="status-pill" style={{ background: STATUS_COLORS[status] || 'var(--ink-faint)' }} onClick={onClick} title="Click to advance status">{status}</button>;
+}
+function PriorityTag({ priority }) {
+  return <span className="priority-dot"><span className="dot" style={{ background: PRIORITY_COLORS[priority] || 'var(--ink-faint)' }}></span>{priority}</span>;
+}
+function ChevronIcon({ open }) {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform .15s' }}><path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function EditIcon() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9" strokeLinecap="round" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+function TrashIcon() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18" strokeLinecap="round" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6h12z" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+
+function TaskRow({ task, audit, showAudit, onCycleStatus, onEdit, onDelete, expanded, onToggleExpand, confirmingId, setConfirmingId }) {
+  const overdue = isOverdue(task);
+  const confirming = confirmingId === task.id;
+  return (
+    <div className={'task-row' + (overdue ? ' is-overdue' : '')}>
+      <div className="task-main">
+        <button className="task-title-btn" onClick={onToggleExpand}>{task.title}</button>
+        <div className="task-tags">
+          {showAudit && audit && <span className="task-audit-tag">{audit.code}</span>}
+          <StatusPill status={task.status} onClick={onCycleStatus} />
+          <PriorityTag priority={task.priority} />
+          {task.recurring && task.recurring !== 'None' && <span className="recurring-tag" title="Repeating task">↻ {task.recurring}</span>}
+          {task.status === 'Done' && task.completedAt
+            ? <span className="due-date" style={{ color: 'var(--status-done)' }}>Completed {task.completedAt}</span>
+            : task.dueDate && <span className={'due-date' + (overdue ? ' overdue' : '')}>{overdue ? 'Overdue · ' : 'Due '}{task.dueDate}</span>}
+          {task.assignee && <span className="assignee-tag">{task.assignee}</span>}
+        </div>
+        <div className="row-actions">
+          <button className="icon-btn" onClick={onToggleExpand} title="Notes"><ChevronIcon open={expanded} /></button>
+          <button className="icon-btn" onClick={onEdit} title="Edit task"><EditIcon /></button>
+          {!confirming
+            ? <button className="icon-btn" onClick={() => setConfirmingId(task.id)} title="Delete task"><TrashIcon /></button>
+            : <span className="delete-confirm">Delete? <button onClick={onDelete}>Yes</button><button onClick={() => setConfirmingId(null)}>Cancel</button></span>}
+        </div>
+      </div>
+      {expanded && <div className="notes-content">{task.notes || 'No notes yet. Click the pencil to add some.'}</div>}
+    </div>
+  );
+}
+
+function TaskModal({ initial, audits, defaultAuditId, onSave, onClose, onDelete }) {
+  const [form, setForm] = useState(initial || { auditId: defaultAuditId, title: '', status: 'Not Started', priority: 'Medium', dueDate: '', assignee: '', notes: '', recurring: 'None' });
+  const isEdit = !!initial;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const handleSubmit = (e) => { e.preventDefault(); if (!form.title.trim()) return; onSave({ ...form, id: form.id || uid('t') }); };
+  return (
+    <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <h2>{isEdit ? 'Edit task' : 'New task'}</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group"><label>Task</label><input type="text" autoFocus value={form.title} onChange={e => update('title', e.target.value)} placeholder="e.g. Sample 25 invoices for cutoff testing" required /></div>
+          {audits.length > 0 && <div className="form-group"><label>Audit</label><select value={form.auditId} onChange={e => update('auditId', e.target.value)}>{audits.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select></div>}
+          <div className="form-row">
+            <div className="form-group"><label>Status</label><select value={form.status} onChange={e => update('status', e.target.value)}>{STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div className="form-group"><label>Priority</label><select value={form.priority} onChange={e => update('priority', e.target.value)}>{PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
+          </div>
+          <div className="form-row">
+            <div className="form-group"><label>Due date</label><input type="date" value={form.dueDate} onChange={e => update('dueDate', e.target.value)} /></div>
+            <div className="form-group"><label>Assignee</label><input type="text" value={form.assignee} onChange={e => update('assignee', e.target.value)} placeholder="e.g. Me, or a colleague" /></div>
+          </div>
+          <div className="form-group"><label>Repeats</label><select value={form.recurring || 'None'} onChange={e => update('recurring', e.target.value)}>{RECURRING_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}</select></div>
+          {form.recurring && form.recurring !== 'None' && <p className="field-hint">When marked done, it'll log the completion and reset to Not Started with the due date pushed forward.</p>}
+          <div className="form-group"><label>Notes</label><textarea rows="3" value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Context, links, who to follow up with..."></textarea></div>
+          <div className="modal-actions">
+            <div>
+              {isEdit && !confirmDelete && <button type="button" className="btn-text" onClick={() => setConfirmDelete(true)}>Delete task</button>}
+              {isEdit && confirmDelete && <span className="delete-confirm">Delete this task? <button type="button" onClick={() => onDelete(form.id)}>Yes</button><button type="button" onClick={() => setConfirmDelete(false)}>Cancel</button></span>}
+            </div>
+            <div className="modal-actions-right">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary">{isEdit ? 'Save changes' : 'Add task'}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AuditModal({ initial, suggestedCode, onSave, onClose, onDelete, taskCount }) {
+  const [form, setForm] = useState(initial || { code: suggestedCode, name: '', role: 'Lead', targetDate: '' });
+  const isEdit = !!initial;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const handleSubmit = (e) => { e.preventDefault(); if (!form.name.trim()) return; onSave({ ...form, id: form.id || uid('a') }); };
+  return (
+    <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <h2>{isEdit ? 'Edit audit' : 'New audit'}</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group"><label>Audit name</label><input type="text" autoFocus value={form.name} onChange={e => update('name', e.target.value)} placeholder="e.g. Q3 Payroll Audit" required /></div>
+          <div className="form-row">
+            <div className="form-group"><label>Reference code</label><input type="text" value={form.code} onChange={e => update('code', e.target.value)} placeholder="AUD-2026-05" /></div>
+            <div className="form-group"><label>Your role</label><select value={form.role} onChange={e => update('role', e.target.value)}>{ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}</select></div>
+          </div>
+          <div className="form-group"><label>Target / report date</label><input type="date" value={form.targetDate} onChange={e => update('targetDate', e.target.value)} /></div>
+          <div className="modal-actions">
+            <div style={{display:'flex',gap:'12px',flexWrap:'wrap',alignItems:'center'}}>
+              {isEdit && !confirmDelete && <button type="button" className="btn-text" onClick={() => setConfirmDelete(true)}>Delete audit</button>}
+              {isEdit && confirmDelete && <span className="delete-confirm">Delete audit{taskCount > 0 ? ` and its ${taskCount} task${taskCount === 1 ? '' : 's'}` : ''}? <button type="button" onClick={() => onDelete(form.id)}>Yes</button><button type="button" onClick={() => setConfirmDelete(false)}>Cancel</button></span>}
+              {isEdit && !confirmDelete && <button type="button" className="btn-text" onClick={() => onSave({ ...form, closed: !form.closed })}>{form.closed ? 'Reopen audit' : 'Close audit'}</button>}
+            </div>
+            <div className="modal-actions-right">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary">{isEdit ? 'Save changes' : 'Add audit'}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ByAuditView({ audits, tasks, activeAuditId, setActiveAuditId, onNewAudit, onEditAudit,
+  onCycleStatus, onEditTask, onDeleteTask, onNewTask, expandedId, setExpandedId, confirmingId, setConfirmingId, hideDone, setHideDone }) {
+  const [showClosed, setShowClosed] = useState(false);
+  const openAudits = audits.filter(a => !a.closed);
+  const closedAudits = audits.filter(a => a.closed);
+  const visibleAudits = showClosed ? audits : openAudits;
+  const activeAudit = visibleAudits.find(a => a.id === activeAuditId) || visibleAudits[0];
+  if (!activeAudit && openAudits.length === 0) {
+    return (
+      <div className="audit-panel" style={{ borderRadius: '10px' }}>
+        <div className="empty-state"><p>No audits yet. Add your first audit to get started.</p><button className="btn btn-primary" onClick={onNewAudit}>+ Add an audit</button></div>
+      </div>
+    );
+  }
+  let auditTasks = activeAudit ? tasks.filter(t => t.auditId === activeAudit.id) : [];
+  const total = auditTasks.length;
+  const done = auditTasks.filter(t => t.status === 'Done').length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  if (hideDone) auditTasks = auditTasks.filter(t => t.status !== 'Done');
+  auditTasks = [...auditTasks].sort((a, b) => {
+    if ((a.status === 'Done') !== (b.status === 'Done')) return a.status === 'Done' ? 1 : -1;
+    if (!a.dueDate) return 1; if (!b.dueDate) return -1;
+    return a.dueDate.localeCompare(b.dueDate);
+  });
+  return (
+    <div>
+      <div className="tabs-row">
+        {visibleAudits.map(a => (
+          <div key={a.id} className={'tab' + (a.id === (activeAudit && activeAudit.id) ? ' active' : '') + (a.closed ? ' closed' : '')} onClick={() => setActiveAuditId(a.id)}>
+            <span className="tab-role-dot" style={{ background: a.closed ? 'var(--ink-faint)' : (ROLE_COLORS[a.role] || 'var(--ink-faint)') }}></span>
+            <span>{a.name}</span>
+            <span className="tab-code">{a.closed ? '✓ closed' : a.code}</span>
+          </div>
+        ))}
+        <button className="tab-add" onClick={onNewAudit} title="Add audit">+</button>
+        {closedAudits.length > 0 && (
+          <label className="show-closed-toggle">
+            <input type="checkbox" checked={showClosed} onChange={e => setShowClosed(e.target.checked)} />
+            {showClosed ? 'Hide' : 'Show'} {closedAudits.length} closed
+          </label>
+        )}
+      </div>
+      {activeAudit && (
+        <div className="audit-panel">
+          {activeAudit.closed && <div className="closed-banner"><span>✓ This audit is closed.</span><button className="btn-text" onClick={() => onEditAudit(activeAudit)}>Reopen it</button></div>}
+          <div className="audit-panel-header">
+            <div>
+              <div className="audit-title-row">
+                <span className="audit-title" style={activeAudit.closed ? { color: 'var(--ink-soft)' } : {}}>{activeAudit.name}</span>
+                <button className="icon-btn" onClick={() => onEditAudit(activeAudit)} title="Edit audit"><EditIcon /></button>
+              </div>
+              <div className="audit-meta-row">
+                <span className="audit-code">{activeAudit.code}</span>
+                <RoleBadge role={activeAudit.role} />
+                {activeAudit.targetDate && <span className="target-date">Target: {activeAudit.targetDate}</span>}
+              </div>
+            </div>
+            <div className="audit-progress">
+              <div className="progress-track"><div className="progress-fill" style={{ width: pct + '%' }}></div></div>
+              <div className="progress-label">{done} / {total} tasks done · {pct}%</div>
+            </div>
+          </div>
+          {!activeAudit.closed && (
+            <div className="task-list-controls">
+              <label className="hide-done"><input type="checkbox" checked={hideDone} onChange={e => setHideDone(e.target.checked)} />Hide completed tasks</label>
+              <button className="btn btn-primary" onClick={() => onNewTask(activeAudit.id)}>+ Add task</button>
+            </div>
+          )}
+          {auditTasks.length === 0
+            ? <div className="empty-state"><p>{total === 0 ? 'No tasks yet for this audit.' : activeAudit.closed ? 'All tasks are done.' : 'Nothing left to show — everything is done.'}</p>{!activeAudit.closed && <button className="btn btn-secondary" onClick={() => onNewTask(activeAudit.id)}>+ Add the first task</button>}</div>
+            : <div className="task-list">{auditTasks.map(t => <TaskRow key={t.id} task={t} audit={activeAudit} showAudit={false} onCycleStatus={() => onCycleStatus(t)} onEdit={() => onEditTask(t)} onDelete={() => onDeleteTask(t.id)} expanded={expandedId === t.id} onToggleExpand={() => setExpandedId(expandedId === t.id ? null : t.id)} confirmingId={confirmingId} setConfirmingId={setConfirmingId} />)}</div>
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AllTasksView({ audits, tasks, onCycleStatus, onEditTask, onDeleteTask, onNewTask, expandedId, setExpandedId, confirmingId, setConfirmingId }) {
+  const [filters, setFilters] = useState({ audit: 'all', role: 'all', status: 'all', priority: 'all', search: '' });
+  const [sortBy, setSortBy] = useState('due');
+  const auditsById = useMemo(() => Object.fromEntries(audits.map(a => [a.id, a])), [audits]);
+  const rolesPresent = useMemo(() => [...new Set(audits.map(a => a.role))], [audits]);
+  let filtered = tasks.filter(t => {
+    if (t.status === 'Done') return false;
+    const audit = auditsById[t.auditId];
+    if (audit && audit.closed) return false;
+    if (filters.audit !== 'all' && t.auditId !== filters.audit) return false;
+    if (filters.role !== 'all' && (!audit || audit.role !== filters.role)) return false;
+    if (filters.status !== 'all' && t.status !== filters.status) return false;
+    if (filters.priority !== 'all' && t.priority !== filters.priority) return false;
+    if (filters.search) { const hay = (t.title + ' ' + (t.notes || '') + ' ' + (t.assignee || '')).toLowerCase(); if (!hay.includes(filters.search.toLowerCase())) return false; }
+    return true;
+  });
+  filtered = [...filtered].sort((a, b) => {
+    if (sortBy === 'due') { if (!a.dueDate) return 1; if (!b.dueDate) return -1; return a.dueDate.localeCompare(b.dueDate); }
+    if (sortBy === 'priority') { const o = {High:0,Medium:1,Low:2}; return o[a.priority] - o[b.priority]; }
+    if (sortBy === 'status') return STATUS_OPTIONS.indexOf(a.status) - STATUS_OPTIONS.indexOf(b.status);
+    if (sortBy === 'audit') { const ca = auditsById[a.auditId] ? auditsById[a.auditId].code : ''; const cb = auditsById[b.auditId] ? auditsById[b.auditId].code : ''; return ca.localeCompare(cb); }
+    return 0;
+  });
+  return (
+    <div>
+      <div className="filter-bar">
+        <select value={filters.audit} onChange={e => setFilters(f => ({ ...f, audit: e.target.value }))}>
+          <option value="all">All audits</option>
+          {audits.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+        </select>
+        <select value={filters.role} onChange={e => setFilters(f => ({ ...f, role: e.target.value }))}>
+          <option value="all">All roles</option>
+          {rolesPresent.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <select value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
+          <option value="all">All statuses</option>
+          {STATUS_OPTIONS.filter(s => s !== 'Done').map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filters.priority} onChange={e => setFilters(f => ({ ...f, priority: e.target.value }))}>
+          <option value="all">All priorities</option>
+          {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="due">Sort: Due date</option>
+          <option value="priority">Sort: Priority</option>
+          <option value="status">Sort: Status</option>
+          <option value="audit">Sort: Audit</option>
+        </select>
+        <input className="search-input" type="text" placeholder="Search tasks, notes..." value={filters.search} onChange={e => setFilters(f => ({ ...f, search: e.target.value }))} />
+      </div>
+      <div className="all-tasks-table">
+        {filtered.length === 0
+          ? <div className="empty-state"><p>No tasks match these filters.</p></div>
+          : filtered.map(t => <TaskRow key={t.id} task={t} audit={auditsById[t.auditId]} showAudit={true} onCycleStatus={() => onCycleStatus(t)} onEdit={() => onEditTask(t)} onDelete={() => onDeleteTask(t.id)} expanded={expandedId === t.id} onToggleExpand={() => setExpandedId(expandedId === t.id ? null : t.id)} confirmingId={confirmingId} setConfirmingId={setConfirmingId} />)
+        }
+      </div>
+    </div>
+  );
+}
+
+function LogView({ audits, completionLog }) {
+  const [auditFilter, setAuditFilter] = useState('all');
+  const auditsById = useMemo(() => Object.fromEntries(audits.map(a => [a.id, a])), [audits]);
+  const completed = completionLog.filter(e => auditFilter === 'all' || e.auditId === auditFilter);
+  const weekAgo = daysAgo(7);
+  const completedThisWeek = completed.filter(e => e.completedAt >= weekAgo).length;
+  const onTime = completed.filter(e => !e.dueDate || e.completedAt <= e.dueDate).length;
+  const onTimePct = completed.length ? Math.round((onTime / completed.length) * 100) : 0;
+  const sorted = [...completed].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+  const groups = [];
+  sorted.forEach(e => { let g = groups.find(g => g.date === e.completedAt); if (!g) { g = { date: e.completedAt, entries: [] }; groups.push(g); } g.entries.push(e); });
+  return (
+    <div>
+      <div className="filter-bar">
+        <select value={auditFilter} onChange={e => setAuditFilter(e.target.value)}>
+          <option value="all">All audits</option>
+          {audits.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+        </select>
+        <div className="log-stats">
+          <span><strong>{completed.length}</strong> completed total</span>
+          <span><strong>{completedThisWeek}</strong> in the last 7 days</span>
+          {completed.length > 0 && <span><strong>{onTimePct}%</strong> on time</span>}
+        </div>
+      </div>
+      {completed.length === 0
+        ? <div className="all-tasks-table"><div className="empty-state"><p>Nothing completed yet.</p></div></div>
+        : groups.map(g => (
+          <div className="log-group" key={g.date}>
+            <div className="log-date-header"><span>{formatLogDate(g.date)}</span><span>{g.entries.length} completed</span></div>
+            {g.entries.map(e => {
+              const audit = auditsById[e.auditId];
+              const late = e.dueDate && e.completedAt > e.dueDate;
+              return (
+                <div className="log-entry" key={e.id}>
+                  {audit && <span className="task-audit-tag">{audit.code}</span>}
+                  <span className="log-entry-title">{e.title}</span>
+                  {audit && <RoleBadge role={audit.role} />}
+                  {e.recurring && e.recurring !== 'None' && <span className="recurring-tag">↻ {e.recurring}</span>}
+                  {e.dueDate && <span className={late ? 'log-tag-late' : 'log-tag-ontime'}>{late ? 'Completed late' : 'On time'}</span>}
+                </div>
+              );
+            })}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+function App() {
+  const initial = loadData();
+  const [audits, setAudits] = useState(initial.audits);
+  const [tasks, setTasks] = useState(initial.tasks);
+  const [completionLog, setCompletionLog] = useState(initial.completionLog || []);
+  const [view, setView] = useState('byAudit');
+  const [activeAuditId, setActiveAuditId] = useState(initial.audits[0] && initial.audits[0].id);
+  const [taskModal, setTaskModal] = useState(null);
+  const [auditModal, setAuditModal] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [confirmingId, setConfirmingId] = useState(null);
+  const [hideDone, setHideDone] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [savedAt, setSavedAt] = useState(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    saveData(audits, tasks, completionLog);
+    setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, [audits, tasks, completionLog]);
+
+  const flash = (type, text) => { setMessage({ type, text }); setTimeout(() => setMessage(null), 4000); };
+  const today = todayStr();
+  const weekAhead = new Date(); weekAhead.setDate(weekAhead.getDate() + 7);
+  const weekAheadStr = toLocalDateStr(weekAhead);
+  const closedAuditIds = new Set(audits.filter(a => a.closed).map(a => a.id));
+  const openTasks = tasks.filter(t => t.status !== 'Done' && !closedAuditIds.has(t.auditId));
+  const overdueTasks = openTasks.filter(t => t.dueDate && t.dueDate < today);
+  const dueSoonTasks = openTasks.filter(t => t.dueDate && t.dueDate >= today && t.dueDate <= weekAheadStr);
+
+  const logCompletion = (task) => {
+    setCompletionLog(log => [...log, { id: uid('log'), auditId: task.auditId, title: task.title, completedAt: todayStr(), dueDate: task.dueDate || null, recurring: task.recurring || 'None' }]);
+  };
+
+  const saveTask = (rawTask) => {
+    const existing = tasks.find(t => t.id === rawTask.id);
+    const becameDone = rawTask.status === 'Done' && (!existing || existing.status !== 'Done');
+    const leftDone = rawTask.status !== 'Done' && existing && existing.status === 'Done';
+    let task = rawTask;
+    if (becameDone) {
+      logCompletion(task);
+      if (task.recurring && task.recurring !== 'None') {
+        task = { ...task, status: 'Not Started', dueDate: advanceDate(task.dueDate, task.recurring), completedAt: null };
+      } else {
+        task = { ...task, completedAt: todayStr() };
+      }
+    } else if (leftDone) {
+      task = { ...task, completedAt: null };
+    }
+    setTasks(ts => existing ? ts.map(t => t.id === task.id ? task : t) : [...ts, task]);
+    setTaskModal(null);
+  };
+
+  const deleteTask = (id) => { setTasks(ts => ts.filter(t => t.id !== id)); setConfirmingId(null); setTaskModal(null); };
+
+  const cycleStatus = (task) => {
+    const ns = nextStatus(task.status);
+    if (ns === 'Done') {
+      logCompletion(task);
+      if (task.recurring && task.recurring !== 'None') {
+        setTasks(ts => ts.map(t => t.id === task.id ? { ...t, status: 'Not Started', dueDate: advanceDate(task.dueDate, task.recurring), completedAt: null } : t));
+      } else {
+        setTasks(ts => ts.map(t => t.id === task.id ? { ...t, status: 'Done', completedAt: todayStr() } : t));
+      }
+    } else {
+      setTasks(ts => ts.map(t => t.id === task.id ? { ...t, status: ns, completedAt: t.status === 'Done' ? null : t.completedAt } : t));
+    }
+  };
+
+  const nextSuggestedCode = () => {
+    const year = new Date().getFullYear();
+    const nums = audits.map(a => a.code.match(new RegExp('AUD-' + year + '-(\\d+)'))).filter(Boolean).map(m => parseInt(m[1], 10));
+    const next = (nums.length ? Math.max(...nums) : 0) + 1;
+    return 'AUD-' + year + '-' + String(next).padStart(2, '0');
+  };
+
+  const saveAudit = (audit) => {
+    setAudits(as => { const exists = as.some(a => a.id === audit.id); return exists ? as.map(a => a.id === audit.id ? audit : a) : [...as, audit]; });
+    if (!audits.some(a => a.id === audit.id)) setActiveAuditId(audit.id);
+    setAuditModal(null);
+  };
+  const deleteAudit = (id) => {
+    setAudits(as => as.filter(a => a.id !== id));
+    setTasks(ts => ts.filter(t => t.auditId !== id));
+    setAuditModal(null);
+    if (activeAuditId === id) { const remaining = audits.filter(a => a.id !== id); setActiveAuditId(remaining.length ? remaining[0].id : null); }
+  };
+
+  const handleExport = () => {
+    const data = { version: 2, exportedAt: new Date().toISOString(), audits, tasks, completionLog };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const time = String(now.getHours()).padStart(2, '0') + '-' + String(now.getMinutes()).padStart(2, '0');
+    const a = document.createElement('a'); a.href = url;
+    a.download = 'audit-desk-backup-' + today + '_' + time + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    flash('success', 'Backup saved.');
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!Array.isArray(data.audits) || !Array.isArray(data.tasks)) throw new Error();
+        const tasksWithDefaults = data.tasks.map(t => ({ recurring: 'None', ...t }));
+        setAudits(data.audits); setTasks(tasksWithDefaults);
+        setCompletionLog(Array.isArray(data.completionLog) ? data.completionLog : []);
+        setActiveAuditId(data.audits.length ? data.audits[0].id : null);
+        flash('success', 'Backup loaded.');
+      } catch (err) { flash('error', 'Could not read that file. Make sure it is a backup exported from Audit Desk.'); }
+    };
+    reader.readAsText(file); e.target.value = '';
+  };
+
+  return (
+    <div className="app">
+      <header className="header">
+        <div>
+          <span className="eyebrow">Personal workload tracker</span>
+          <h1>Audit Desk</h1>
+        </div>
+        <div className="header-controls">
+          <div className="view-toggle">
+            <button className={'toggle-btn' + (view === 'byAudit' ? ' active' : '')} onClick={() => setView('byAudit')}>By Audit</button>
+            <button className={'toggle-btn' + (view === 'allTasks' ? ' active' : '')} onClick={() => setView('allTasks')}>All Tasks</button>
+            <button className={'toggle-btn' + (view === 'log' ? ' active' : '')} onClick={() => setView('log')}>Log</button>
+          </div>
+          <div className="io-actions">
+            <button className="btn btn-secondary" onClick={handleExport}>Save backup</button>
+            <button className="btn btn-secondary" onClick={() => fileInputRef.current.click()}>Load backup</button>
+            <input type="file" accept="application/json" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportFile} />
+          </div>
+        </div>
+      </header>
+
+      {message && <div className={'banner banner-' + message.type}>{message.text}</div>}
+
+      <section className="stats-row">
+        <div className="stat-card"><div className="stat-value">{audits.filter(a => !a.closed).length}</div><div className="stat-label">Audits in flight</div></div>
+        <div className="stat-card"><div className="stat-value">{openTasks.length}</div><div className="stat-label">Open tasks</div></div>
+        <div className="stat-card"><div className="stat-value">{dueSoonTasks.length}</div><div className="stat-label">Due in next 7 days</div></div>
+        <div className={'stat-card' + (overdueTasks.length ? ' is-overdue' : '')}><div className="stat-value">{overdueTasks.length}</div><div className="stat-label">Overdue</div></div>
+      </section>
+
+      {view === 'byAudit' ? (
+        <ByAuditView audits={audits} tasks={tasks} activeAuditId={activeAuditId} setActiveAuditId={setActiveAuditId}
+          onNewAudit={() => setAuditModal({ mode: 'add' })} onEditAudit={(audit) => setAuditModal({ mode: 'edit', audit })}
+          onCycleStatus={cycleStatus} onEditTask={(task) => setTaskModal({ initial: task })} onDeleteTask={deleteTask}
+          onNewTask={(auditId) => setTaskModal({ initial: null, defaultAuditId: auditId })}
+          expandedId={expandedId} setExpandedId={setExpandedId} confirmingId={confirmingId} setConfirmingId={setConfirmingId}
+          hideDone={hideDone} setHideDone={setHideDone} />
+      ) : view === 'allTasks' ? (
+        <AllTasksView audits={audits} tasks={tasks} onCycleStatus={cycleStatus}
+          onEditTask={(task) => setTaskModal({ initial: task })} onDeleteTask={deleteTask}
+          onNewTask={(auditId) => setTaskModal({ initial: null, defaultAuditId: auditId })}
+          expandedId={expandedId} setExpandedId={setExpandedId} confirmingId={confirmingId} setConfirmingId={setConfirmingId} />
+      ) : (
+        <LogView audits={audits} completionLog={completionLog} />
+      )}
+
+      <div className="footer-note">
+        {savedAt && <span className="save-indicator"><span className="save-dot"></span> Auto-saved at {savedAt}</span>}
+        {' · '}Use <strong>Save backup</strong> occasionally to keep a local copy.
+      </div>
+
+      {taskModal && <TaskModal initial={taskModal.initial} audits={audits} defaultAuditId={taskModal.defaultAuditId || activeAuditId || (audits[0] && audits[0].id)} onSave={saveTask} onClose={() => setTaskModal(null)} onDelete={deleteTask} />}
+      {auditModal && <AuditModal initial={auditModal.mode === 'edit' ? auditModal.audit : null} suggestedCode={nextSuggestedCode()} taskCount={auditModal.mode === 'edit' ? tasks.filter(t => t.auditId === auditModal.audit.id).length : 0} onSave={saveAudit} onClose={() => setAuditModal(null)} onDelete={deleteAudit} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
